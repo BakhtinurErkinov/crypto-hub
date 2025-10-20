@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>CryptoHub</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="container">
+    <h1>💰 CryptoHub</h1>
+    <p class="subtitle">Real-Time Cryptocurrency Tracker</p>
+
+    <div class="input-area">
+        <input type="text" id="symbol" placeholder="Enter crypto id (e.g., bitcoin)">
+        <button onclick="getPrice()">Get Price</button>
+    </div>
+
+    <div id="result-area">
+        <table id="result-table" class="hidden">
+            <thead>
+            <tr>
+                <th>Logo</th>
+                <th>Name</th>
+                <th>Price (USD)</th>
+            </tr>
+            </thead>
+            <tbody id="table-body"></tbody>
+        </table>
+    </div>
+
+    <p class="footer">Powered by CoinGecko API</p>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
