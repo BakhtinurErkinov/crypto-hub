@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <title>CryptoHub</title>
     <link rel="stylesheet" href="styles.css">
+    <!-- Подключаем библиотеку для графиков -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
 <div class="container">
@@ -11,8 +13,8 @@
     <p class="subtitle">Real-Time Cryptocurrency Tracker</p>
 
     <div class="input-area">
-        <input type="text" id="symbol" placeholder="Enter crypto id (e.g., bitcoin)">
-        <button onclick="getPrice()">Get Price</button>
+        <input type="text" id="cryptoInput" placeholder="Enter crypto id (e.g., bitcoin)">
+        <button onclick="fetchPrice()">Get Price</button>
     </div>
 
     <div id="result-area">
@@ -28,9 +30,15 @@
         </table>
     </div>
 
+    <!-- 🎯 Здесь график цены -->
+    <div class="chart-area">
+        <canvas id="priceChart" width="600" height="300"></canvas>
+    </div>
+
     <p class="footer">Powered by CoinGecko API</p>
 </div>
 
+<!-- Подключаем основной JS -->
 <script src="app.js"></script>
 </body>
 </html>
