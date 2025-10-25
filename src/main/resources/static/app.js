@@ -94,3 +94,35 @@ function renderChart(labels, prices, cryptoId) {
         }
     });
 }
+
+// === 🔥 Получение новостей о криптовалютах ===
+async function loadCryptoNews() {
+    const newsList = document.getElementById('news-list');
+    newsList.innerHTML = '<li>Loading news...</li>';
+
+    try {
+        const response = await fetch('https://min-api.cryptocompare.com/data/v2/news/?lang=EN');
+        const data = await response.json();
+
+        newsList.innerHTML = '';
+
+        data.Data.slice(0, 5).forEach(news => {
+            const li = document.createElement('li');
+            li.innerHTML = `
+                <a href="${news.url}" target="_blank">
+                    <strong>${news.title}</strong><br>
+                    <span>${news.source_info.name}</span> |
+                    <small>${new Date(news.published_on * 1000).toLocaleString()}</small>
+                </a>
+            `;
+            newsList.appendChild(li);
+        });
+    } catch (err) {
+        newsList.innerHTML = '<li>Error loading news.</li>';
+        console.error(err);
+    }
+}
+
+// Загружаем новости при открытии страницы
+window.onload = loadCryptoNews;
+

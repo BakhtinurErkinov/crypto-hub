@@ -81,3 +81,36 @@ img {
     color: #888;
     font-size: 0.9rem;
 }
+
+#news-section {
+    margin-top: 40px;
+    text-align: left;
+}
+
+#news-section h2 {
+    font-size: 22px;
+    margin-bottom: 10px;
+}
+
+#news-list {
+    list-style: none;
+    padding: 0;
+}
+
+#news-list li {
+    background: #f6f6f6;
+    margin-bottom: 10px;
+    padding: 10px;
+    border-radius: 8px;
+    transition: background 0.2s ease;
+}
+
+#news-list li:hover {
+    background: #e0e0e0;
+}
+
+#news-list a {
+    text-decoration: none;
+    color: #333;
+}
+
