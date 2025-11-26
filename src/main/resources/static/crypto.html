@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Crypto Details</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+<div class="container">
+    <a href="index.html" class="back">← Back to Home</a>
+    <div id="crypto-details">
+        <h1 id="crypto-name">Loading...</h1>
+        <img id="crypto-logo" src="" alt="" style="width:80px; height:80px;">
+        <p id="crypto-description"></p>
+
+        <div class="stats">
+            <p><strong>Current Price:</strong> $<span id="crypto-price"></span></p>
+            <p><strong>Market Cap:</strong> $<span id="crypto-marketcap"></span></p>
+            <p><strong>24h Volume:</strong> $<span id="crypto-volume"></span></p>
+            <p><strong>Homepage:</strong> <a id="crypto-homepage" href="#" target="_blank">Visit</a></p>
+        </div>
+
+        <h2>📈 7-Day Price Chart</h2>
+        <canvas id="cryptoChart" width="600" height="300"></canvas>
+
+        <h2>📰 Latest News About <span id="crypto-name-news"></span></h2>
+        <ul id="crypto-news"></ul>
+    </div>
+</div>
+
+<script src="crypto.js"></script>
+</body>
+</html>

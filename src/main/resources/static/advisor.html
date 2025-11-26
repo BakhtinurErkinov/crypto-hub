@@ -1,0 +1,31 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>CryptoHub Advisor</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="container">
+    <h1>🤖 Crypto Advisor</h1>
+    <p>Enter your budget, time horizon and risk to get a suggested portfolio.</p>
+
+    <div class="advisor-form">
+        <input id="budget" type="number" placeholder="Budget USD (e.g., 500)" />
+        <input id="horizon" type="number" placeholder="Horizon months (e.g., 6)" />
+        <select id="risk">
+            <option value="low">Low</option>
+            <option value="medium" selected>Medium</option>
+            <option value="high">High</option>
+        </select>
+        <button onclick="getRecommendation()">Get Recommendation</button>
+    </div>
+
+    <div id="recommendation"></div>
+
+    <p><a href="index.html">← Back</a></p>
+</div>
+
+<script src="advisor.js"></script>
+</body>
+</html>

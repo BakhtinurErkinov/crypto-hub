@@ -1,0 +1,30 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>CryptoHub Game</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="container">
+    <h1>🎯 Price Guess Game</h1>
+    <p>Server picks a historical day for a coin. You guess whether the next day price was higher or lower.</p>
+
+    <div>
+        <input id="game-coin" placeholder="coin id (e.g., bitcoin)" />
+        <button onclick="newRound()">New Round</button>
+    </div>
+
+    <div id="round-area"></div>
+
+    <div id="result-area"></div>
+
+    <h3>Leaderboard</h3>
+    <div id="leaderboard"></div>
+
+    <p><a href="index.html">← Back</a></p>
+</div>
+
+<script src="game.js"></script>
+</body>
+</html>

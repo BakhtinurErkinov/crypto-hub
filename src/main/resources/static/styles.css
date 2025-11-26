@@ -114,3 +114,31 @@ img {
     color: #333;
 }
 
+.crypto-table {
+    margin: 20px auto;
+    border-collapse: collapse;
+    width: 85%;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.crypto-table th, .crypto-table td {
+    padding: 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.crypto-table th {
+    background-color: rgba(255, 255, 255, 0.15);
+    color: #00ffcc;
+}
+
+.crypto-table a {
+    color: #00ffcc;
+    text-decoration: none;
+}
+
+.crypto-table a:hover {
+    text-decoration: underline;
+}
+

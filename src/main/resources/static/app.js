@@ -1,128 +1,41 @@
-// Основная функция — вызывается при нажатии кнопки
-async function fetchPrice() {
-    const cryptoId = document.getElementById("cryptoInput").value.trim().toLowerCase();
+// 🌍 Загружаем список популярных криптовалют при загрузке страницы
+document.addEventListener("DOMContentLoaded", loadTopCryptos);
 
-    if (!cryptoId) {
-        alert("Please enter a crypto id (e.g., bitcoin)");
-        return;
-    }
-
-    // --- 1️⃣ Получаем общие данные ---
-    const response = await fetch(`/api/crypto/price/${cryptoId}`);
-    if (!response.ok) {
-        alert("Cryptocurrency not found!");
-        return;
-    }
-
-    const data = await response.json();
-    const name = data.name;
-    const price = data.market_data.current_price.usd.toFixed(2);
-    const image = data.image.small;
-
-    // --- 2️⃣ Отображаем таблицу с данными ---
-    const table = document.getElementById("result-table");
-    const tbody = document.getElementById("table-body");
-
-    tbody.innerHTML = `
-        <tr>
-            <td><img src="${image}" alt="${name}" width="30"></td>
-            <td>${name}</td>
-            <td>$${price}</td>
-        </tr>
-    `;
-
-    table.classList.remove("hidden");
-
-    // --- 3️⃣ Загружаем и рисуем график ---
-    fetchChartData(cryptoId);
-}
-
-// --- 4️⃣ Получаем данные для графика ---
-async function fetchChartData(cryptoId) {
-    const response = await fetch(`/api/crypto/chart/${cryptoId}`);
-    if (!response.ok) {
-        console.error("Chart data not found");
-        return;
-    }
-
-    const data = await response.json();
-
-    const prices = data.prices.map(p => p[1]);
-    const labels = data.prices.map(p => {
-        const date = new Date(p[0]);
-        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    });
-
-    renderChart(labels, prices, cryptoId);
-}
-
-// --- 5️⃣ Отрисовка графика ---
-let chart;
-
-function renderChart(labels, prices, cryptoId) {
-    const ctx = document.getElementById("priceChart").getContext("2d");
-
-    // Если график уже был — удалить, чтобы не наслаивались
-    if (chart) {
-        chart.destroy();
-    }
-
-    chart = new Chart(ctx, {
-        type: "line",
-        data: {
-            labels: labels,
-            datasets: [{
-                label: `${cryptoId.toUpperCase()} (USD)`,
-                data: prices,
-                borderColor: "rgba(75, 192, 192, 1)",
-                fill: true,
-                backgroundColor: "rgba(75, 192, 192, 0.1)",
-                tension: 0.3,
-                pointRadius: 2
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: { display: true }
-            },
-            scales: {
-                y: {
-                    beginAtZero: false
-                }
-            }
-        }
-    });
-}
-
-// === 🔥 Получение новостей о криптовалютах ===
-async function loadCryptoNews() {
-    const newsList = document.getElementById('news-list');
-    newsList.innerHTML = '<li>Loading news...</li>';
+async function loadTopCryptos() {
+    const container = document.getElementById("crypto-list");
 
     try {
-        const response = await fetch('https://min-api.cryptocompare.com/data/v2/news/?lang=EN');
+        const response = await fetch("https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=20&page=1&sparkline=false");
         const data = await response.json();
 
-        newsList.innerHTML = '';
-
-        data.Data.slice(0, 5).forEach(news => {
-            const li = document.createElement('li');
-            li.innerHTML = `
-                <a href="${news.url}" target="_blank">
-                    <strong>${news.title}</strong><br>
-                    <span>${news.source_info.name}</span> |
-                    <small>${new Date(news.published_on * 1000).toLocaleString()}</small>
-                </a>
-            `;
-            newsList.appendChild(li);
-        });
+        container.innerHTML = `
+            <table class="crypto-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Logo</th>
+                        <th>Name</th>
+                        <th>Symbol</th>
+                        <th>Price (USD)</th>
+                        <th>Market Cap</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${data.map((coin, index) => `
+                        <tr>
+                            <td>${index + 1}</td>
+                            <td><img src="${coin.image}" alt="${coin.name}" width="32"></td>
+                            <td><a href="crypto.html?id=${coin.id}">${coin.name}</a></td>
+                            <td>${coin.symbol.toUpperCase()}</td>
+                            <td>$${coin.current_price.toLocaleString()}</td>
+                            <td>$${coin.market_cap.toLocaleString()}</td>
+                        </tr>
+                    `).join("")}
+                </tbody>
+            </table>
+        `;
     } catch (err) {
-        newsList.innerHTML = '<li>Error loading news.</li>';
+        container.innerHTML = `<p style="color:red;">Failed to load cryptocurrency list. Please try again later.</p>`;
         console.error(err);
     }
 }
-
-// Загружаем новости при открытии страницы
-window.onload = loadCryptoNews;
-
