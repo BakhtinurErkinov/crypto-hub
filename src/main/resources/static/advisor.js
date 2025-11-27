@@ -1,27 +1,20 @@
-async function getRecommendation() {
-    const budget = parseFloat(document.getElementById('budget').value || '0');
-    const horizon = parseInt(document.getElementById('horizon').value || '6');
-    const risk = document.getElementById('risk').value;
+async function askAdvisor() {
+    const question = document.getElementById("question").value.trim();
+    const mode = document.getElementById("mode").value;
 
-    const resp = await fetch('/api/advisor/recommend', {
-        method: 'POST',
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({ budgetUsd: budget, horizonMonths: horizon, risk })
+    if (!question) {
+        alert("Please enter your question!");
+        return;
+    }
+
+    const response = await fetch("/api/advisor/ask", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question, mode })
     });
-    const data = await resp.json();
 
-    const container = document.getElementById('recommendation');
-    container.innerHTML = `<h3>Recommendation</h3>
-        <p>${data.explanation}</p>
-        <p>Budget: $${data.budgetUsd}</p>
-        <table>
-            <thead><tr><th>Coin</th><th>Percent</th><th>Amount (USD)</th></tr></thead>
-            <tbody>
-                ${Object.entries(data.allocation).map(([coin, pct]) => {
-                    const amount = (data.suggestedAmounts && data.suggestedAmounts[coin]) || (budget * pct).toFixed(2);
-                    return `<tr><td>${coin}</td><td>${(pct*100).toFixed(1)}%</td><td>$${amount}</td></tr>`;
-                }).join('')}
-            </tbody>
-        </table>
-    `;
+    const data = await response.json();
+
+    document.getElementById("answer-text").innerText = data.answer;
+    document.getElementById("answer-box").classList.remove("hidden");
 }

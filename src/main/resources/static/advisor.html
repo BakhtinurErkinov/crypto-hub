@@ -1,31 +1,35 @@
-<!doctype html>
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-    <meta charset="utf-8">
-    <title>CryptoHub Advisor</title>
+    <meta charset="UTF-8">
+    <title>Crypto Advisor</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+
 <div class="container">
-    <h1>🤖 Crypto Advisor</h1>
-    <p>Enter your budget, time horizon and risk to get a suggested portfolio.</p>
+    <h1>🤖 Crypto AI Advisor</h1>
 
-    <div class="advisor-form">
-        <input id="budget" type="number" placeholder="Budget USD (e.g., 500)" />
-        <input id="horizon" type="number" placeholder="Horizon months (e.g., 6)" />
-        <select id="risk">
-            <option value="low">Low</option>
-            <option value="medium" selected>Medium</option>
-            <option value="high">High</option>
-        </select>
-        <button onclick="getRecommendation()">Get Recommendation</button>
-    </div>
+    <textarea id="question" placeholder="Ask anything about crypto..."></textarea>
+    <button onclick="askAI()">Ask</button>
 
-    <div id="recommendation"></div>
-
-    <p><a href="index.html">← Back</a></p>
+    <div id="answer-box"></div>
 </div>
 
-<script src="advisor.js"></script>
+<script>
+    async function askAI() {
+        const question = document.getElementById("question").value;
+
+        const response = await fetch("http://localhost:8080/api/advisor", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({question})
+        });
+
+        const data = await response.json();
+        document.getElementById("answer-box").innerText = data.answer;
+    }
+</script>
+
 </body>
 </html>
