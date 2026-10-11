@@ -1,65 +1,53 @@
 package com.cryptohub.service;
 
+import com.cryptohub.entity.ChatMessage;
+import com.theokanning.openai.service.OpenAiService;
+import com.theokanning.openai.completion.chat.ChatCompletionRequest;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.WebClient;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 public class AdvisorService {
 
-    private final WebClient webClient;
-
     @Value("${openai.api.key}")
     private String apiKey;
 
-    public AdvisorService() {
-        this.webClient = WebClient.builder()
-                .baseUrl("https://api.openai.com/v1/chat/completions")
-                .build();
-    }
-
     public String generateAnswer(String question) {
-
-        String requestBody = """
-                {
-                  "model": "gpt-4o-mini",
-                  "messages": [
-                    {
-                      "role": "system",
-                      "content": "You are CryptoAdvisor AI — an expert in cryptocurrencies, trading, blockchain, DeFi, security, and tokenomics. Provide clear, accurate, useful explanations."
-                    },
-                    {
-                      "role": "user",
-                      "content": "%s"
-                    }
-                  ],
-                  "temperature": 0.7
-                }
-                """.formatted(question);
-
-        try {
-            String response = webClient.post()
-                    .header("Authorization", "Bearer " + apiKey)
-                    .header("Content-Type", "application/json")
-                    .bodyValue(requestBody)
-                    .retrieve()
-                    .bodyToMono(String.class)
-                    .block();
-
-            return extractAnswer(response);
-
-        } catch (Exception e) {
-            return "⚠️ Error getting AI response. Check your API key or internet connection.";
-        }
+        return generateAnswerWithContext(question, null);
     }
 
-    private String extractAnswer(String json) {
+    public String generateAnswerWithContext(String question, List<ChatMessage> history) {
+
         try {
-            int start = json.indexOf("\"content\":\"") + 11;
-            int end = json.indexOf("\"", start);
-            return json.substring(start, end).replace("\\n", "\n");
+            OpenAiService service = new OpenAiService(apiKey);
+
+            List<com.theokanning.openai.completion.chat.ChatMessage> messages = new ArrayList<>();
+            messages.add(new com.theokanning.openai.completion.chat.ChatMessage("system",
+                    "You are CryptoAdvisor AI — a professional cryptocurrency advisor expert in trading, blockchain technology, DeFi, NFTs, tokenomics, risk management, and market analysis. Provide clear, well-structured, and actionable advice. Use markdown formatting in responses."));
+            
+            if (history != null) {
+                for (ChatMessage msg : history) {
+                    messages.add(new com.theokanning.openai.completion.chat.ChatMessage(msg.getRole(), msg.getContent()));
+                }
+            }
+            
+            messages.add(new com.theokanning.openai.completion.chat.ChatMessage("user", question));
+
+            ChatCompletionRequest request = ChatCompletionRequest.builder()
+                    .model("gpt-3.5-turbo")
+                    .messages(messages)
+                    .temperature(0.7)
+                    .maxTokens(500)
+                    .build();
+
+            var response = service.createChatCompletion(request);
+            return response.getChoices().get(0).getMessage().getContent();
         } catch (Exception e) {
-            return "AI response parsing error.";
+            e.printStackTrace();
+            return "Error: " + e.getMessage();
         }
     }
 }

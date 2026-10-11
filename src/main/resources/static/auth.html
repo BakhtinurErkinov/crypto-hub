@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Authentication | CryptoHub</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body style="justify-content: center; align-items: center;">
+    <script src="nav.js"></script>
+
+    <div class="glass-card" style="width: 100%; max-width: 400px; padding: 40px; text-align: center;">
+        <h2 id="auth-title" style="margin-bottom: 24px; background: var(--gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Welcome Back</h2>
+        
+        <form id="auth-form" onsubmit="handleAuth(event)">
+            <div class="form-group" style="text-align: left;">
+                <label>Username</label>
+                <input type="text" id="username" class="form-control" required>
+            </div>
+            
+            <div class="form-group" id="email-group" style="display: none; text-align: left;">
+                <label>Email</label>
+                <input type="email" id="email" class="form-control">
+            </div>
+            
+            <div class="form-group" style="text-align: left;">
+                <label>Password</label>
+                <input type="password" id="password" class="form-control" required>
+            </div>
+            
+            <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 16px; padding: 12px;" id="submit-btn">Login</button>
+        </form>
+        
+        <p style="margin-top: 24px; color: var(--text-secondary); font-size: 14px;">
+            <span id="toggle-text">Don't have an account?</span> 
+            <a href="#" id="toggle-link" style="color: var(--accent); font-weight: 600;">Register</a>
+        </p>
+    </div>
+
+    <script>
+        let isLogin = true;
+        
+        const urlParams = new URLSearchParams(window.location.search);
+        if(urlParams.get('mode') === 'register') {
+            toggleMode();
+        }
+
+        document.getElementById('toggle-link').addEventListener('click', (e) => {
+            e.preventDefault();
+            toggleMode();
+        });
+
+        function toggleMode() {
+            isLogin = !isLogin;
+            const emailGroup = document.getElementById('email-group');
+            const title = document.getElementById('auth-title');
+            const btn = document.getElementById('submit-btn');
+            const text = document.getElementById('toggle-text');
+            const link = document.getElementById('toggle-link');
+            
+            if(isLogin) {
+                emailGroup.style.display = 'none';
+                document.getElementById('email').removeAttribute('required');
+                title.textContent = 'Welcome Back';
+                btn.textContent = 'Login';
+                text.textContent = "Don't have an account?";
+                link.textContent = 'Register';
+            } else {
+                emailGroup.style.display = 'block';
+                document.getElementById('email').setAttribute('required', 'true');
+                title.textContent = 'Create Account';
+                btn.textContent = 'Register';
+                text.textContent = 'Already have an account?';
+                link.textContent = 'Login';
+            }
+        }
+
+        async function handleAuth(e) {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const email = document.getElementById('email').value;
+            const btn = document.getElementById('submit-btn');
+            
+            const url = isLogin ? '/api/auth/login' : '/api/auth/register';
+            const body = isLogin ? {username, password} : {username, email, password};
+            
+            try {
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+                btn.disabled = true;
+
+                const res = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+                
+                if(!res.ok) {
+                    const text = await res.text();
+                    throw new Error(text || 'Authentication failed');
+                }
+                
+                const data = await res.json();
+                localStorage.setItem('cryptohub_token', data.token);
+                localStorage.setItem('cryptohub_user', data.username);
+                
+                showToast('Success!', 'success');
+                setTimeout(() => window.location.href = 'index.html', 1000);
+            } catch (err) {
+                showToast(err.message, 'error');
+                btn.textContent = isLogin ? 'Login' : 'Register';
+                btn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>

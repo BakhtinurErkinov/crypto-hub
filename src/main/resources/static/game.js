@@ -1,64 +1,118 @@
 let currentRoundId = null;
-let currentCoin = null;
 
-async function newRound() {
-    const coin = document.getElementById('game-coin').value.trim().toLowerCase();
-    if (!coin) { alert('Enter coin id'); return; }
-    currentCoin = coin;
+// Auto-fill username if logged in
+const savedUser = localStorage.getItem('cryptohub_user');
+if(savedUser) {
+    document.getElementById('game-username').value = savedUser;
+}
 
-    const resp = await fetch(`/api/game/new?coin=${coin}`);
-    const data = await resp.json();
-    if (data.error) { alert(data.error); return; }
+async function startRound() {
+    const coin = document.getElementById('game-coin').value;
+    const btn = document.getElementById('start-btn');
+    
+    try {
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
+        btn.disabled = true;
 
-    currentRoundId = data.roundId;
+        const res = await fetch(`/api/game/new?coin=${coin}`);
+        const data = await res.json();
 
-    const date = new Date(data.dateMillis);
-    document.getElementById('round-area').innerHTML = `
-        <p>Coin: <strong>${data.coin}</strong></p>
-        <p>Day (reference): <strong>${date.toLocaleDateString()}</strong></p>
-        <p>Price that day: <strong>$${data.priceDay.toFixed(2)}</strong></p>
-        <p>Will price be <strong>higher</strong> or <strong>lower</strong> the next day?</p>
-        <button onclick="submitGuess(true)">Higher (Up)</button>
-        <button onclick="submitGuess(false)">Lower (Down)</button>
-        <div>
-          <input id="username" placeholder="Your name for leaderboard (optional)"/>
-        </div>
-    `;
-    document.getElementById('result-area').innerHTML = '';
+        currentRoundId = data.roundId;
+        
+        document.getElementById('game-setup').style.display = 'none';
+        document.getElementById('game-play').style.display = 'block';
+        document.getElementById('result-screen').classList.remove('active');
+        document.getElementById('game-box').classList.remove('shake');
+
+        document.getElementById('round-coin').textContent = data.coin;
+        document.getElementById('round-date').textContent = new Date(data.dateMillis).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
+        document.getElementById('round-price').textContent = `$${data.priceDay.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 6})}`;
+        
+    } catch(e) {
+        showToast('Failed to start round', 'error');
+    } finally {
+        btn.textContent = 'Start New Round';
+        btn.disabled = false;
+    }
 }
 
 async function submitGuess(guessUp) {
-    if (!currentRoundId) { alert('Start a round first'); return; }
-    const username = document.getElementById('username').value || 'Anonymous';
+    const username = document.getElementById('game-username').value.trim() || 'Anonymous';
+    
+    try {
+        const res = await fetch('/api/game/submit', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ roundId: currentRoundId, username, guessUp })
+        });
+        
+        const result = await res.json();
+        showResult(result);
+        loadLeaderboard();
+    } catch(e) {
+        showToast('Submission failed', 'error');
+    }
+}
 
-    const resp = await fetch('/api/game/submit', {
-        method: 'POST',
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({ roundId: currentRoundId, username, guessUp })
-    });
-    const data = await resp.json();
-    if (data.error) { alert(data.error); return; }
+function showResult(data) {
+    const screen = document.getElementById('result-screen');
+    const title = document.getElementById('result-title');
+    const msg = document.getElementById('result-msg');
+    const box = document.getElementById('game-box');
 
-    document.getElementById('result-area').innerHTML = `
-        <p>Your guess was: <strong>${guessUp ? 'Higher' : 'Lower'}</strong></p>
-        <p>Correct answer: <strong>${data.correctUp ? 'Higher' : 'Lower'}</strong></p>
-        <p>Correct: <strong>${data.correct}</strong></p>
-        <p>Points awarded: <strong>${data.pointsAwarded}</strong></p>
-    `;
-    currentRoundId = null;
-    loadLeaderboard();
+    screen.classList.add('active');
+
+    if (data.correct) {
+        title.textContent = '🎉 CORRECT!';
+        title.className = 'text-positive';
+        msg.textContent = `The price went ${data.correctUp ? 'UP' : 'DOWN'}. You earned ${data.pointsAwarded} points!`;
+        confetti({
+            particleCount: 100,
+            spread: 70,
+            origin: { y: 0.6 }
+        });
+    } else {
+        title.textContent = '❌ WRONG!';
+        title.className = 'text-negative';
+        msg.textContent = `The price actually went ${data.correctUp ? 'UP' : 'DOWN'}. Better luck next time!`;
+        box.classList.add('shake');
+    }
 }
 
 async function loadLeaderboard() {
-    const resp = await fetch('/api/game/leaderboard');
-    const data = await resp.json();
-    const el = document.getElementById('leaderboard');
-    if (!data || Object.keys(data).length === 0) {
-        el.innerHTML = '<p>No scores yet.</p>';
-        return;
+    try {
+        const res = await fetch('/api/game/leaderboard');
+        const data = await res.json(); // expected { "user1": 150, "user2": 100 }
+        
+        // Convert to array and sort
+        const entries = Object.entries(data).map(([name, score]) => ({name, score}));
+        entries.sort((a, b) => b.score - a.score);
+
+        const tbody = document.getElementById('leaderboard-body');
+        tbody.innerHTML = '';
+
+        if(entries.length === 0) {
+            tbody.innerHTML = '<tr><td style="text-align: center; color: var(--text-secondary); padding: 16px;">No scores yet</td></tr>';
+            return;
+        }
+
+        entries.forEach((entry, idx) => {
+            let rankHtml = `<span style="color: var(--text-secondary);">${idx + 1}</span>`;
+            if(idx === 0) rankHtml = `<span class="rank-badge rank-1">1</span>`;
+            else if(idx === 1) rankHtml = `<span class="rank-badge rank-2">2</span>`;
+            else if(idx === 2) rankHtml = `<span class="rank-badge rank-3">3</span>`;
+
+            tbody.innerHTML += `
+                <tr>
+                    <td style="width: 40px; text-align: center;">${rankHtml}</td>
+                    <td style="font-weight: 600;">${entry.name}</td>
+                    <td style="text-align: right; color: var(--accent); font-weight: bold;">${entry.score} pts</td>
+                </tr>
+            `;
+        });
+    } catch(e) {
+        console.error("Leaderboard load failed", e);
     }
-    el.innerHTML = '<ol>' + Object.entries(data).map(([u,s]) => `<li>${u}: ${s}</li>`).join('') + '</ol>';
 }
 
-// загрузить при открытии
 loadLeaderboard();

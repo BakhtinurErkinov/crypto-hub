@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Converter | CryptoHub</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .converter-card {
+            max-width: 500px;
+            margin: 40px auto;
+            position: relative;
+        }
+        .swap-btn {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--surface-hover);
+            border: 1px solid var(--border);
+            color: var(--accent);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 10;
+            transition: 0.3s;
+        }
+        .swap-btn:hover {
+            background: var(--accent);
+            color: var(--bg);
+            transform: translate(-50%, -50%) rotate(180deg);
+        }
+        .amount-display {
+            font-size: 32px;
+            font-weight: 700;
+            text-align: center;
+            margin-top: 24px;
+            word-break: break-all;
+        }
+    </style>
+</head>
+<body>
+    <script src="nav.js"></script>
+
+    <div class="container">
+        <div class="glass-card converter-card">
+            <h2 style="text-align: center; margin-bottom: 32px;">Crypto Converter</h2>
+            
+            <div class="form-group">
+                <label>From</label>
+                <div style="display: flex; gap: 8px;">
+                    <input type="number" id="amount" class="form-control" value="1" step="any" style="flex: 2;">
+                    <select id="from-asset" class="form-control" style="flex: 1;">
+                        <option value="bitcoin">Bitcoin (BTC)</option>
+                        <option value="ethereum">Ethereum (ETH)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div style="position: relative; height: 20px; margin: 24px 0;">
+                <div class="swap-btn" onclick="swapAssets()">
+                    <i class="fas fa-exchange-alt" style="transform: rotate(90deg);"></i>
+                </div>
+                <hr style="border: 0; border-top: 1px dashed var(--border); position: absolute; top: 10px; width: 100%;">
+            </div>
+
+            <div class="form-group">
+                <label>To</label>
+                <select id="to-asset" class="form-control">
+                    <option value="usd">USD - US Dollar</option>
+                    <option value="eur">EUR - Euro</option>
+                    <option value="gbp">GBP - British Pound</option>
+                    <option value="jpy">JPY - Japanese Yen</option>
+                    <option value="rub">RUB - Russian Ruble</option>
+                    <option value="btc">BTC - Bitcoin</option>
+                    <option value="eth">ETH - Ethereum</option>
+                </select>
+            </div>
+
+            <button class="btn btn-primary" style="width: 100%; margin-top: 16px; padding: 14px;" onclick="convert()">Convert</button>
+
+            <div class="amount-display" id="result-display">
+                $0.00
+            </div>
+            <p style="text-align: center; color: var(--text-secondary); margin-top: 8px; font-size: 14px;" id="rate-display"></p>
+        </div>
+    </div>
+
+    <script src="converter.js"></script>
+</body>
+</html>
