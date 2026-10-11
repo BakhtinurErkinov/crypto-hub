@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portfolio | CryptoHub</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <script src="nav.js"></script>
+
+    <div class="container" id="auth-guard">
+        <div class="empty-state">
+            <i class="fas fa-lock"></i>
+            <h3>Authentication Required</h3>
+            <p style="margin-top: 8px;">Please login to manage your portfolio.</p>
+            <a href="auth.html" class="btn btn-primary" style="margin-top: 16px;">Go to Login</a>
+        </div>
+    </div>
+
+    <div class="container" id="main-content" style="display: none;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+            <h2>My Portfolio</h2>
+            <button class="btn btn-primary" onclick="openModal()"><i class="fas fa-plus"></i> Add Transaction</button>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 24px; margin-bottom: 32px;">
+            <div class="glass-card">
+                <p style="color: var(--text-secondary); font-size: 14px; margin-bottom: 8px;">Total Balance</p>
+                <h3 id="total-balance">$0.00</h3>
+            </div>
+            <div class="glass-card">
+                <p style="color: var(--text-secondary); font-size: 14px; margin-bottom: 8px;">Total Invested</p>
+                <h3 id="total-invested">$0.00</h3>
+            </div>
+            <div class="glass-card">
+                <p style="color: var(--text-secondary); font-size: 14px; margin-bottom: 8px;">Total P&L</p>
+                <h3 id="total-pnl">$0.00</h3>
+                <p id="total-pnl-pct" style="font-size: 14px; font-weight: 500;"></p>
+            </div>
+            <div class="glass-card">
+                <p style="color: var(--text-secondary); font-size: 14px; margin-bottom: 8px;">Best Performer</p>
+                <h3 id="best-asset">-</h3>
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px; align-items: start;">
+            <div class="glass-card">
+                <h3 style="margin-bottom: 16px;">Holdings</h3>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Asset</th>
+                                <th>Amount</th>
+                                <th>Avg. Buy Price</th>
+                                <th>Current Price</th>
+                                <th>Value</th>
+                                <th>P&L</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="portfolio-table">
+                            <!-- JS populated -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="glass-card">
+                <h3 style="margin-bottom: 16px;">Allocation</h3>
+                <div style="height: 250px; position: relative;">
+                    <canvas id="allocation-chart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal-overlay" id="tx-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modal-title">Add Transaction</h3>
+                <button class="close-modal" onclick="closeModal()">&times;</button>
+            </div>
+            <form id="tx-form" onsubmit="saveTransaction(event)">
+                <input type="hidden" id="tx-id">
+                <div class="form-group">
+                    <label>Coin ID (e.g. bitcoin)</label>
+                    <input type="text" id="tx-coin" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label>Amount</label>
+                    <input type="number" id="tx-amount" step="any" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label>Buy Price (USD)</label>
+                    <input type="number" id="tx-price" step="any" class="form-control" required>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Save</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="portfolio.js"></script>
+</body>
+</html>

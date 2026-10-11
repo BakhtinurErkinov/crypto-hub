@@ -1,30 +1,147 @@
-<!doctype html>
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-    <meta charset="utf-8">
-    <title>CryptoHub Game</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prediction Game | CryptoHub</title>
     <link rel="stylesheet" href="styles.css">
+    <style>
+        .game-card {
+            text-align: center;
+            max-width: 600px;
+            margin: 0 auto 32px;
+            padding: 40px 24px;
+            position: relative;
+            overflow: hidden;
+        }
+        .historic-date {
+            font-size: 18px;
+            color: var(--accent);
+            margin-bottom: 8px;
+        }
+        .historic-price {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 24px;
+        }
+        .vote-btns {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            margin-top: 24px;
+        }
+        .vote-btn {
+            flex: 1;
+            padding: 16px;
+            font-size: 20px;
+            font-weight: 600;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: 0.3s;
+            border: 2px solid transparent;
+            background: rgba(0,0,0,0.3);
+            color: white;
+        }
+        .vote-up:hover { border-color: var(--positive); background: rgba(0, 230, 118, 0.1); }
+        .vote-down:hover { border-color: var(--negative); background: rgba(255, 82, 82, 0.1); }
+        
+        .result-overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(10, 14, 26, 0.9);
+            backdrop-filter: blur(5px);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: 0.3s;
+            z-index: 10;
+        }
+        .result-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        
+        /* Shake animation for wrong answer */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-10px); }
+            20%, 40%, 60%, 80% { transform: translateX(10px); }
+        }
+        .shake { animation: shake 0.5s; }
+        
+        /* Leaderboard */
+        .rank-badge {
+            width: 24px; height: 24px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .rank-1 { background: #FFD700; color: #000; }
+        .rank-2 { background: #C0C0C0; color: #000; }
+        .rank-3 { background: #CD7F32; color: #fff; }
+    </style>
 </head>
 <body>
-<div class="container">
-    <h1>🎯 Price Guess Game</h1>
-    <p>Server picks a historical day for a coin. You guess whether the next day price was higher or lower.</p>
+    <script src="nav.js"></script>
 
-    <div>
-        <input id="game-coin" placeholder="coin id (e.g., bitcoin)" />
-        <button onclick="newRound()">New Round</button>
+    <div class="container">
+        <div style="text-align: center; margin-bottom: 24px;">
+            <h2>📈 Price Prediction Game 📉</h2>
+            <p style="color: var(--text-secondary); margin-top: 8px;">Guess if the price went HIGHER or LOWER 30 days later!</p>
+        </div>
+
+        <div class="glass-card game-card" id="game-box">
+            <div id="game-setup">
+                <select id="game-coin" class="form-control" style="max-width: 200px; margin: 0 auto 16px;">
+                    <option value="bitcoin">Bitcoin (BTC)</option>
+                    <option value="ethereum">Ethereum (ETH)</option>
+                    <option value="solana">Solana (SOL)</option>
+                </select>
+                <div class="form-group" style="max-width: 200px; margin: 0 auto 24px;">
+                    <input type="text" id="game-username" class="form-control" placeholder="Enter username" style="text-align: center;">
+                </div>
+                <button class="btn btn-primary" onclick="startRound()" id="start-btn">Start New Round</button>
+            </div>
+
+            <div id="game-play" style="display: none;">
+                <h3 id="round-coin" style="text-transform: capitalize;">-</h3>
+                <p class="historic-date">On <span id="round-date">-</span></p>
+                <p style="color: var(--text-secondary);">The price was</p>
+                <div class="historic-price" id="round-price">-</div>
+                
+                <p>What happened 30 days later?</p>
+                
+                <div class="vote-btns">
+                    <button class="vote-btn vote-up" onclick="submitGuess(true)">📈 HIGHER</button>
+                    <button class="vote-btn vote-down" onclick="submitGuess(false)">📉 LOWER</button>
+                </div>
+            </div>
+
+            <div class="result-overlay" id="result-screen">
+                <h2 id="result-title" style="font-size: 32px; margin-bottom: 16px;">-</h2>
+                <p id="result-msg" style="margin-bottom: 24px; color: var(--text-secondary);">-</p>
+                <button class="btn btn-primary" onclick="startRound()">Play Again</button>
+            </div>
+        </div>
+
+        <div class="glass-card" style="max-width: 600px; margin: 0 auto;">
+            <h3 style="margin-bottom: 16px; display: flex; align-items: center; gap: 8px;"><i class="fas fa-trophy text-positive"></i> Leaderboard</h3>
+            <table style="width: 100%;">
+                <tbody id="leaderboard-body">
+                    <!-- JS populated -->
+                </tbody>
+            </table>
+        </div>
     </div>
 
-    <div id="round-area"></div>
-
-    <div id="result-area"></div>
-
-    <h3>Leaderboard</h3>
-    <div id="leaderboard"></div>
-
-    <p><a href="index.html">← Back</a></p>
-</div>
-
-<script src="game.js"></script>
+    <!-- Confetti Script -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script src="game.js"></script>
 </body>
 </html>

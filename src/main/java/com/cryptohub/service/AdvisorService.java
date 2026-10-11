@@ -1,73 +1,53 @@
 package com.cryptohub.service;
 
+import com.cryptohub.entity.ChatMessage;
+import com.theokanning.openai.service.OpenAiService;
+import com.theokanning.openai.completion.chat.ChatCompletionRequest;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 public class AdvisorService {
 
-    /**
-     * Простая rule-based рекомендация портфеля.
-     * Вход:
-     *  - budgetUsd (double)
-     *  - horizonMonths (int)
-     *  - risk ("low","medium","high")
-     *
-     * Возвращает Map: { allocation: {coin: percent}, explanation: "...", suggestedAmounts: {coin: amount} }
-     */
-    public Map<String, Object> recommend(double budgetUsd, int horizonMonths, String risk) {
-        // базовый набор монет для рекомендаций (можно расширить)
-        String[] conservative = {"bitcoin", "ethereum", "usd-coin"};
-        String[] balanced = {"bitcoin", "ethereum", "chainlink", "cardano"};
-        String[] aggressive = {"bitcoin", "ethereum", "chainlink", "solana", "polygon", "cardano"};
+    @Value("${openai.api.key}")
+    private String apiKey;
 
-        Map<String, Double> allocation = new LinkedHashMap<>();
-        String explanation;
-
-        switch (risk == null ? "medium" : risk.toLowerCase()) {
-            case "low":
-                // heavy BTC/ETH + stablecoin
-                allocation.put("bitcoin", 0.6);
-                allocation.put("ethereum", 0.25);
-                allocation.put("usd-coin", 0.15);
-                explanation = "Low risk: преимущественно BTC и ETH с резервом в стейблкоинах.";
-                break;
-            case "high":
-                allocation.put("bitcoin", 0.35);
-                allocation.put("ethereum", 0.25);
-                allocation.put("solana", 0.15);
-                allocation.put("chainlink", 0.15);
-                allocation.put("polygon", 0.10);
-                explanation = "High risk: диверсификация с более волатильными альткоинами для роста.";
-                break;
-            default:
-                allocation.put("bitcoin", 0.5);
-                allocation.put("ethereum", 0.3);
-                allocation.put("chainlink", 0.1);
-                allocation.put("cardano", 0.1);
-                explanation = "Medium risk: сбалансированный портфель BTC/ETH + перспективные альты.";
-                break;
-        }
-
-        Map<String, Double> suggestedAmounts = new LinkedHashMap<>();
-        for (Map.Entry<String, Double> e : allocation.entrySet()) {
-            suggestedAmounts.put(e.getKey(), round(budgetUsd * e.getValue(), 2));
-        }
-
-        return Map.of(
-                "allocation", allocation,
-                "suggestedAmounts", suggestedAmounts,
-                "explanation", explanation,
-                "budgetUsd", budgetUsd,
-                "horizonMonths", horizonMonths,
-                "risk", risk
-        );
+    public String generateAnswer(String question) {
+        return generateAnswerWithContext(question, null);
     }
 
-    private static double round(double v, int places) {
-        double scale = Math.pow(10, places);
-        return Math.round(v * scale) / scale;
+    public String generateAnswerWithContext(String question, List<ChatMessage> history) {
+
+        try {
+            OpenAiService service = new OpenAiService(apiKey);
+
+            List<com.theokanning.openai.completion.chat.ChatMessage> messages = new ArrayList<>();
+            messages.add(new com.theokanning.openai.completion.chat.ChatMessage("system",
+                    "You are CryptoAdvisor AI — a professional cryptocurrency advisor expert in trading, blockchain technology, DeFi, NFTs, tokenomics, risk management, and market analysis. Provide clear, well-structured, and actionable advice. Use markdown formatting in responses."));
+            
+            if (history != null) {
+                for (ChatMessage msg : history) {
+                    messages.add(new com.theokanning.openai.completion.chat.ChatMessage(msg.getRole(), msg.getContent()));
+                }
+            }
+            
+            messages.add(new com.theokanning.openai.completion.chat.ChatMessage("user", question));
+
+            ChatCompletionRequest request = ChatCompletionRequest.builder()
+                    .model("gpt-3.5-turbo")
+                    .messages(messages)
+                    .temperature(0.7)
+                    .maxTokens(500)
+                    .build();
+
+            var response = service.createChatCompletion(request);
+            return response.getChoices().get(0).getMessage().getContent();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "Error: " + e.getMessage();
+        }
     }
 }
